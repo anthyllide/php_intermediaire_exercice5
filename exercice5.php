@@ -13,26 +13,41 @@
 </form>
 
 <?php 
-if (!empty($_POST['recherche']))
+
+//on vérifie si la variable existe et n'est pas nulle		
+if (isset ($_POST['recherche']) AND $_POST['recherche'] != NULL)
 	{
-		try {
+	    try {
 		$bdd = new PDO ('mysql:host=localhost; dbname=projet_villes','root','');
 		}
 		catch (Exception $e)
 		{
 		die ('Erreur: '.$e->getMessage());
 		}
+		
+		$recherche = htmlspecialchars($_POST['recherche']);//Evite les injection XSS
+		
 		$result = $bdd -> prepare('SELECT population, villes_nom FROM villes WHERE villes_nom LIKE ?') or die (print_r($bdd->errorInfo()));
-		$result -> execute (array('%'.$_POST['recherche'].'%'));
+		$result -> execute (array('%'.$recherche.'%'));
+		$count = $result ->rowCount(); //méthode qui compte le nb de lignes (marche av execute)
 		
-		while ($row = $result -> fetch())
-		{
-		echo $row['villes_nom'].' a une population de '.$row ['population'];
-		}
+		if ($count >0) 
+			{
+				while ($row = $result -> fetch())
+				{
+			
+				?><p><?php echo $row['villes_nom'].' a une population de '.$row ['population']. '.';?></p>
 		
+				<?php
 		$result-> closeCursor();
-		
+				}
+			}
+		else
+		{
+		echo 'Aucun résultat ne correspond.';
+		}
 	}
+
 else 
 {
 echo 'Veuillez saisir votre recherche !';
